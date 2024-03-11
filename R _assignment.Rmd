@@ -1,0 +1,283 @@
+---
+title: '"R Assignment"'
+author: "Vedika Desai"
+date: "2024-03-07"
+output: html_document
+---
+
+#Load applicable packages
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(gtools)
+```
+
+#Load .txt files "fang_et_al_genotypes.txt" and "snp_position.txt" from GitHub
+```{r}
+fang_et_al_genotypes.txt <- read_tsv("https://github.com/EEOB-BioData/BCB546_Spring2024/raw/main/assignments/UNIX_Assignment/fang_et_al_genotypes.txt")
+snp_position.txt <- read_tsv("https://github.com/EEOB-BioData/BCB546_Spring2024/raw/main/assignments/UNIX_Assignment/snp_position.txt")
+```
+
+##Part I 
+
+#Data Inspection
+```{r}
+
+# fang_et_al_genotypes.txt
+dim(fang_et_al_genotypes.txt)
+ncol(fang_et_al_genotypes.txt)
+nrow(fang_et_al_genotypes.txt)
+head(fang_et_al_genotypes.txt)
+tail(fang_et_al_genotypes.txt)
+names(fang_et_al_genotypes.txt)
+
+# snp_position.txt
+dim(snp_position.txt)
+ncol(snp_position.txt)
+nrow(snp_position.txt)
+head(snp_position.txt)
+tail(snp_position.txt)
+names(snp_position.txt)
+```
+
+# Data processing 
+
+#Maize
+```{r}
+
+# Subsetting Maize data from Groups ZMMIL,ZMMLR and ZMMMR from file fang_et_al_genotypes.txt
+Maize <- filter(fang_et_al_genotypes.txt, Group %in% c("ZMMIL","ZMMLR","ZMMMR"))
+
+#Remove columns 1-3
+Maize <- Maize[-c(2:3)]
+
+# Transpose Maize
+transposed_maize_data <- t(Maize)
+
+#Set "Sample_ID" row as column names
+colnames(transposed_maize_data) <- transposed_maize_data[1,] 
+transposed_maize_data <- transposed_maize_data[-1,]
+
+dir.create("Maize_data")
+
+# Iterate through chromosomes
+for (i in 1:10) 
+{
+# Extract rows for the current chromosome from snp_position.txt
+extracted_chr_data <- snp_position.txt[snp_position.txt$Chromosome == i, c(1, 3, 4)]
+
+# Write extracted data to a file
+write.table(extracted_chr_data, file = paste0("extracted_chr_", i, ".txt"), sep = "\t", row.names = FALSE, col.names = FALSE)
+  
+# Perform a merge between extracted data and transposed_maize_data
+merged_maize <- merge(extracted_chr_data, transposed_maize_data,by.x = "SNP_ID", by.y = "row.names", all.x = TRUE)
+
+##Sort and write data for each chromosome with SNPs ordered based on "increasing" position values with missing data encoded by symbol:? 
+
+#Convert Position from character to numeric
+merged_maize$Position <- as.numeric(merged_maize$Position)
+
+increasing_chr_maize <- paste0("Maize_data/Maize_chr_increasing", i, ".txt")
+
+write.table(cbind("SNP_ID", "Chromosome", "Position", "Genotype"), file = increasing_chr_maize, sep = "\t", row.names = FALSE, col.names = FALSE)
+ 
+Maize_increasing_Chr <- merged_maize[order(merged_maize$Position), ]
+
+write.table(Maize_increasing_Chr[,c(1,2,3,4,5:ncol(Maize_increasing_Chr))], file = increasing_chr_maize, sep = "\t", row.names = FALSE, col.names = FALSE, append = TRUE)
+ 
+##Sort and write data for each chromosome with SNPs ordered based on "decreasing" position values with missing data encoded by symbol: -
+
+decreasing_chr_maize <- paste0("Maize_data/ Maize_chr_decreasing", i, ".txt")
+
+write.table(cbind("SNP_ID", "Chromosome", "Position", "Genotype"), file = decreasing_chr_maize, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+Maize_decreasing_Chr <- merged_maize[order(-merged_maize$Position), ]
+
+# Replace ? with -
+Maize_decreasing_Chr[Maize_decreasing_Chr == "?/?"] <- "-/-" 
+
+write.table(Maize_decreasing_Chr[, c(1, 2, 3,4, 5:ncol(Maize_decreasing_Chr))], file = decreasing_chr_maize, sep = "\t", row.names = FALSE, col.names = FALSE, append = TRUE)
+}
+```
+
+#Teosinte
+```{r}
+
+# Subsetting teosinte data from Groups ZMPBA, ZMPIL, and ZMPJA from file fang_et_al_genotypes.txt
+Teosinte <- filter(fang_et_al_genotypes.txt, Group %in% c("ZMPBA","ZMPIL","ZMPJA"))
+
+#Remove columns 1-3
+Teosinte <- Teosinte[-c(2:3)]
+
+# Transpose Teosinte
+transposed_teosinte_data <- t(Teosinte)
+
+#Set "Sample_ID" row as column names
+colnames(transposed_teosinte_data) <- transposed_teosinte_data[1,] 
+transposed_teosinte_data <- transposed_teosinte_data[-1,]
+
+dir.create("Teosinte_data")
+
+# Iterate through chromosomes
+for (i in 1:10) 
+{
+# Extract rows for the current chromosome from snp_position.txt
+extracted_chr_data <- snp_position.txt[snp_position.txt$Chromosome == i, c(1, 3, 4)]
+
+# Write extracted data to a file
+write.table(extracted_chr_data, file = paste0("extracted_chr_", i, ".txt"), sep = "\t", row.names = FALSE, col.names = FALSE)
+  
+# Perform a merge between extracted data and transposed_teosinte_data
+merged_teosinte <- merge(extracted_chr_data, transposed_teosinte_data,by.x = "SNP_ID", by.y = "row.names", all.x = TRUE)
+
+##Sort and write data for each chromosome with SNPs ordered based on  "increasing" position values with missing data encoded by symbol:? 
+
+#Convert Position from character to numeric
+merged_teosinte$Position <- as.numeric(merged_teosinte$Position)
+
+increasing_chr_teosinte <- paste0("teosinte_data/Teosinte_chr_increasing", i, ".txt")
+
+write.table(cbind("SNP_ID", "Chromosome", "Position", "Genotype"), file = increasing_chr_teosinte, sep = "\t", row.names = FALSE, col.names = FALSE)
+ 
+Teosinte_increasing_Chr <- merged_teosinte[order(merged_teosinte$Position), ]
+
+write.table(Teosinte_increasing_Chr[,c(1,2,3,4,5:ncol(Teosinte_increasing_Chr))], file = increasing_chr_teosinte, sep = "\t", row.names = FALSE, col.names = FALSE, append = TRUE)
+ 
+##Sort and write data for each chromosome with SNPs ordered based on "decreasing" position values with missing data encoded by symbol: -
+
+decreasing_chr_teosinte <- paste0("Teosinte_data/ Teosinte_chr_decreasing", i, ".txt")
+
+write.table(cbind("SNP_ID", "Chromosome", "Position", "Genotype"), file = decreasing_chr_teosinte, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+Teosinte_decreasing_Chr <- merged_teosinte[order(-merged_teosinte$Position), ]
+
+# Replace ? with -
+Teosinte_decreasing_Chr[Teosinte_decreasing_Chr == "?/?"] <- "-/-" 
+
+write.table(Teosinte_decreasing_Chr[, c(1, 2, 3,4, 5:ncol(Teosinte_decreasing_Chr))], file = decreasing_chr_teosinte, sep = "\t", row.names = FALSE, col.names = FALSE, append = TRUE)
+}
+```
+
+##Part II
+
+# Visualization
+
+1. SNPs per chromosome
+```{r}
+dir.create("Visualization")
+
+#Subsetting maize (Group = ZMMIL, ZMMLR and ZMMMR) and teosinte (Group = ZMPBA, ZMPIL and ZMPJA) data:
+maize_teosinte <- filter(fang_et_al_genotypes.txt,Group %in% c("ZMMIL","ZMMLR","ZMMMR","ZMPBA","ZMPIL","ZMPJA"))
+maize_teosinte <- maize_teosinte[-c(2)]
+maize_teosinte_transposed <- t(maize_teosinte)
+colnames(maize_teosinte_transposed) <- maize_teosinte_transposed[1,] 
+maize_teosinte_transposed <- maize_teosinte_transposed[-1,]
+maize_teosinte_snp <- merge(snp_position.txt,maize_teosinte_transposed,by.x = "SNP_ID", by.y = "row.names")
+
+#Plot SNPs per chromosome 
+SNPs_per_chr_plot <- ggplot (data = maize_teosinte_snp) + geom_bar(mapping = aes(x = Chromosome, fill = Chromosome)) +xlab(label = "Chromosome") + ylab(label = "SNPs") + ggtitle("SNPs per Chromosome") + scale_x_discrete(limit=c(1:10, "unknown", "multiple"))
+
+#Chromosome 1 has the most SNPs, whereas chromosome 10 has the least amount of SNPs#
+
+#Plot SNPs per chromosome for both maize and teosinte individually:
+#FOR MAIZE:
+maize <- filter(fang_et_al_genotypes.txt,Group %in% c("ZMMIL","ZMMLR","ZMMMR"))
+maize <- maize[-c(2)]
+maize_transposed <- t(maize)
+colnames(maize_transposed) <- maize_transposed[1,] 
+maize_transposed <- maize_transposed[-1,]
+maize_snp <- merge(snp_position.txt,maize_transposed,by.x = "SNP_ID", by.y = "row.names")
+
+SNPs_per_chr_maize <- ggplot (data = maize_snp) + geom_bar(mapping = aes(x = Chromosome, fill = Chromosome)) +xlab(label = "Chromosome") + ylab(label = "SNPs") + ggtitle("SNPs per Chromosome for Maize") + scale_x_discrete(limit=c(1:10, "unknown", "multiple"))
+
+#FOR TEOSINTE:
+Teosinte <- filter(fang_et_al_genotypes.txt,Group %in% c("ZMPBA","ZMPIL","ZMPJA"))
+Teosinte <- Teosinte[-c(2)]
+Teosinte_transposed <- t(Teosinte)
+colnames(Teosinte_transposed) <- Teosinte_transposed[1,] 
+Teosinte_transposed <- Teosinte_transposed[-1,]
+teosinte_snp <- merge(snp_position.txt,Teosinte_transposed,by.x = "SNP_ID", by.y = "row.names")
+
+SNPs_per_chr_teosinte <- ggplot (data = teosinte_snp) + geom_bar(mapping = aes(x = Chromosome, fill = Chromosome)) +xlab(label = "Chromosome") + ylab(label = "SNPs") + ggtitle("SNPs per Chromosome for Teosinte") + scale_x_discrete(limit=c(1:10, "unknown", "multiple"))
+
+# Save the plots as PNG files:
+ggsave("./Visualization/SNPs_per_chr_plot.png", SNPs_per_chr_plot)
+ggsave("./Visualization/SNPs_per_chr_maize.png", SNPs_per_chr_maize)
+ggsave("./Visualization/SNPs_per_chr_teosinte.png", SNPs_per_chr_teosinte)
+```
+#From the plots, there does not seem to be a difference between maize and teosinte in terms of amount of SNP positions found in these two genotypes
+
+
+##Distribution of SNPs across each chromosome for both maize and teosinte 
+```{r}
+#Filtering out the 'unknown' and 'multiple' chromosomes values
+filtered_snp_position <- filter(snp_position.txt, Chromosome != "unknown" & Chromosome != "multiple")
+filtered_maize_snp <- filter(maize_snp, Chromosome != "unknown" & Chromosome != "multiple")
+filtered_teosinte_snp <- filter(teosinte_snp, Chromosome != "unknown" & Chromosome != "multiple")
+
+#Plotting the overall distribution of SNPs across the chromosome
+overall_SNPs_plot <- ggplot(filtered_snp_position, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + geom_density() + facet_wrap(~ Chromosome, nrow = 10, ncol = 2) + theme_bw() + labs(x = "Position", y = "Density")
+
+#Plotting the distribution of SNPs across the chromosome for maize:
+Maize_SNP_plot <- ggplot(filtered_maize_snp, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + geom_density() + facet_wrap(~ Chromosome, nrow = 5, ncol = 2) + theme_bw() + labs(title = "Distribution of SNPs across the Chromosome", x = "Position", y = "Density")
+
+#Plotting the distribution of SNPs across the chromosome for teosinte:
+Teosinte_SNP_plot <- ggplot(filtered_teosinte_snp, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + geom_density() + facet_wrap(~ Chromosome, nrow = 5, ncol = 2) + theme_bw() + labs(x = "Position", y = "Density")
+
+# Save the plots as PNG files:
+ggsave("./Visualization/overall_SNPs_plot.png", overall_SNPs_plot)
+ggsave("./Visualization/Maize_SNP_plot.png", Maize_SNP_plot)
+ggsave("./Visualization/Teosinte_SNP_plot.png", Teosinte_SNP_plot)
+```
+
+2. Missing data, amount of heterozygosity & homozygosity
+```{r}
+#Visualizing homozygosity, heterozygosity and missing data as a whole by Group and by Sample:
+
+fang_et_al <- read_tsv("https://github.com/EEOB-BioData/BCB546_Spring2024/raw/main/assignments/UNIX_Assignment/fang_et_al_genotypes.txt")
+
+#Create a data frame with five columns: "Sample_ID," "Group," and "Category" for both maize and teosinte, "SNP_ID" and whether the SNPs are heterozygous, homozygous, or containg missing data:
+fang_et_al[fang_et_al == "?/?"] <- "Missing"
+fang_et_al[fang_et_al == "A/A" | fang_et_al == "T/T" | fang_et_al == "C/C" | fang_et_al == "G/G"] <- "Homozygous"
+fang_et_al[fang_et_al == "C/G" | fang_et_al == "A/C" | fang_et_al ==  "G/T" | fang_et_al == "A/G" | fang_et_al == "C/T" | fang_et_al == "A/T"] <- "Heterozygous"
+
+fang_mt_data <- fang_et_al %>% select(-JG_OTU) %>% pivot_longer(cols = -c("Sample_ID", "Group"), values_to = "SNP_Data")
+
+#Plot fraction of homozygosity, heterozygosity and missing data by Group
+HHM_group_plot  <- ggplot(fang_mt_data, aes( x= Group, fill = SNP_Data)) + geom_bar(position = "fill") + xlab("Group") + ylab("Fraction")
+
+#Plot fraction of homozygosity, heterozygosity and missing data by Sample
+HHM_sample_plot <- ggplot(fang_mt_data) + geom_bar(mapping = aes(x=Sample_ID, fill = SNP_Data), position = "fill") + xlab("Sample") + ylab("Fraction")
+
+# Save the plots as PNG files:
+ggsave("./Visualization/HHM_group_plot.png", HHM_group_plot)
+ggsave("./Visualization/HHM_sample_plot.png", HHM_sample_plot)
+```
+#Summary:
+-By comparing the ratios between the homozgyous to heterozygous sites in maize and teosinte sample, it can be concluded that maize has more samples that have disproportionately higher homozygous SNP sites than teosinte. 
+-The amount of missing data in both maize and teosinte looks similar with the amount of homozgyous SNP sites being higher than heterozygous sites.
+
+##Own visualization
+#Plot percentage of heterozgyous sites of each sample by group
+```{r}
+Group <- maize_teosinte$Group
+Sample_ID <- maize_teosinte$Sample_ID
+Homozygous <- rowSums(maize_teosinte == "A/A" | maize_teosinte == "C/C" | maize_teosinte == "G/G" | maize_teosinte == "T/T")
+Heterozygous <- rowSums(maize_teosinte == "A/G" | maize_teosinte == "A/C" | maize_teosinte == "A/T" | maize_teosinte == "C/G" | maize_teosinte == "G/T" | maize_teosinte == "C/T")
+Missing_Data <- rowSums(maize_teosinte == "?/?")
+rep_group = c('ZMMIL' = 'Maize', 'ZMMLR' = 'Maize', 'ZMMMR' = 'Maize', 'ZMPBA' = 'Teosinte', 'ZMPIL' = "Teosinte", 'ZMPJA' = 'Teosinte' )
+fang_mt <- filter(fang_et_al,Group %in% c("ZMMIL","ZMMLR","ZMMMR","ZMPBA","ZMPIL","ZMPJA"))
+fang_mt$Group <- str_replace_all(fang_mt$Group, rep_group)
+Homo_Hetero <- Homozygous/Heterozygous
+Missing_Percent <- (Missing_Data/(Heterozygous + Homozygous + Missing_Data))*100
+Homo_Percent <- (Homozygous/(Heterozygous + Homozygous + Missing_Data))*100
+Hetero_Percent <- (Heterozygous/(Heterozygous + Homozygous + Missing_Data))*100
+dataframe_maize_teosinte <- data.frame(Sample_ID, Group,Homozygous, Homo_Percent, Heterozygous, Hetero_Percent, Homo_Hetero, Missing_Data, Missing_Percent)
+
+#Plot 
+percentage_hetero_plot <- ggplot(data = dataframe_maize_teosinte, aes(x = Sample_ID, y = Hetero_Percent, fill = Group )) + geom_bar(stat = "identity",  width = 0.4, position=position_dodge(width = 0.5)) + theme_classic() + labs(title = "Percentage of Heterozygous Sites by Group", x = "Sample_ID", y = "Percent Hetrozygosity")
+
+# Save the plots as PNG files:
+ggsave("./Visualization/percentage_hetero_plot.png", percentage_hetero_plot)
+```
