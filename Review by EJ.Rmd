@@ -1,0 +1,40 @@
+---
+title: "Vedika_review_EJ"
+author: "ESTHER JOKODOLA"
+date: "2024-03-18"
+output: html_document
+---
+
+Data Inspection
+
+ You can add a comment that states the file size , number of columns, number of lines in words of both files. Just a brief summary of what was inspected in this file.
+
+Data Processing
+The two files were formatted correctly for downstream analysis.
+
+There is this warning when running the Maize data section and the Teosinte data
+Warning: NAs introduced by coercion Warning: NAs introduced by coercion Warning: NAs introduced by coercion Warning: NAs introduced by coercion Warning: NAs introduced by coercion
+The code runs with the warning, This warning might indicate  that there might be unexpected missing or incompatible data in your dataset. You can check your data to be sure it all data are compatible and there is no missing data.
+
+
+Visualization
+
+SNPs per chromosome
+The plots visualizing SNPs per chromosome looks well organized! The application of ggsave is great!
+The conclusion also gives a good description to the SNP positions in maize or teosinte individuals.
+
+
+Missing Data and amount of heterozygosity.
+The Plots are well organized and displays the required information. The application of ggsave is great!
+A summary of what was observed is also stated.
+
+
+Own Visualization
+
+The y axis labelling is not consistent for this line of code.
+#Plot 
+percentage_hetero_plot <- ggplot(data = dataframe_maize_teosinte, aes(x = Sample_ID, y = Hetero_Percent, fill = Group )) + geom_bar(stat = "identity",  width = 0.4, position=position_dodge(width = 0.5)) + theme_classic() + labs(title = "Percentage of Heterozygous Sites by Group", x = "Sample_ID", y = "Percent Hetrozygosity")
+
+What would be a summary from the visualization? What would the plots imply? You can consider adding a brief summary for this plot.
+
+Overall, R code is well structured and accomplishes the majority of the required tasks.
